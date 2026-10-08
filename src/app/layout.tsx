@@ -1,25 +1,6 @@
 import type { Metadata, Viewport } from "next";
-import { IBM_Plex_Mono, Noto_Sans_SC, Noto_Serif_SC } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
-
-const notoSans = Noto_Sans_SC({
-	variable: "--font-noto-sans",
-	subsets: ["latin"],
-	weight: ["400", "500", "700"],
-});
-
-const notoSerif = Noto_Serif_SC({
-	variable: "--font-noto-serif",
-	subsets: ["latin"],
-	weight: ["400", "600", "700"],
-});
-
-const ibmPlexMono = IBM_Plex_Mono({
-	variable: "--font-ibm-mono",
-	subsets: ["latin"],
-	weight: ["400", "500"],
-});
 
 export const metadata: Metadata = {
 	title: "UCAS Course Sign in",
@@ -62,7 +43,7 @@ export default function RootLayout({
 		<html
 			lang="zh-CN"
 			suppressHydrationWarning
-			className={`${notoSans.variable} ${notoSerif.variable} ${ibmPlexMono.variable} h-full antialiased`}
+			className="h-full antialiased"
 		>
 			<body className="min-h-full flex flex-col">
 				<Script id="theme-init" strategy="beforeInteractive">
