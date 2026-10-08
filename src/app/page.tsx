@@ -217,20 +217,19 @@ function writeRepoStarsCache(stars: number, repoUpdatedAt: string): void {
 }
 
 export default function Home() {
-	const repoUrl = "https://github.com/lccipher/UCAS-Course-Sign-in";
+	const repoUrl = "https://github.com/arlisgreat/UCAS-Course-Sign-in";
 	const [themeMode, setThemeMode] = useState<ThemeMode>(getSavedThemeMode);
 	const [resolvedTheme, setResolvedTheme] = useState<"light" | "dark">("light");
 	const [repoStars, setRepoStars] = useState<number | null>(null);
 	const [repoUpdatedAt, setRepoUpdatedAt] = useState<string>("");
 	const [featureMode, setFeatureMode] = useState<FeatureMode>("query");
-	const [username, setUsername] = useState("");
-	const [password, setPassword] = useState("");
+	const [username, setUsername] = useState("202618015059012");
 	const [date, setDate] = useState(getTodayInputDate);
 	const [keyword, setKeyword] = useState("");
 	const [manualIdentifier, setManualIdentifier] = useState("");
 	const [courses, setCourses] = useState<CourseItem[]>([]);
 	const [selectedUuid, setSelectedUuid] = useState("");
-	const [statusText, setStatusText] = useState("输入学号、密码和日期，开始查询课程");
+	const [statusText, setStatusText] = useState("选择账号和日期，开始查询课程");
 	const [statusKind, setStatusKind] = useState<StatusKind>("idle");
 	const [actionStatusText, setActionStatusText] = useState(ACTION_STATUS_DEFAULT_TEXT);
 	const [actionStatusKind, setActionStatusKind] = useState<StatusKind>("idle");
@@ -489,7 +488,7 @@ export default function Home() {
 	const hasQr = Boolean(qrDataUrl);
 	const queryAttempted = statusKind !== "idle";
 	const hasKeyword = keyword.trim().length > 0;
-	const emptyHelpText = hasKeyword ? "可先清空筛选词，再查看全部课程" : "检查日期是否为上课日，并确认学号与密码正确";
+	const emptyHelpText = hasKeyword ? "可先清空筛选词，再查看全部课程" : "检查日期是否为上课日，并确认所选账号正确";
 	const isCourseSelected = (uuid: string): boolean => selectedUuid === uuid;
 
 	const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -511,7 +510,6 @@ export default function Home() {
 				},
 				body: JSON.stringify({
 					username: username.trim(),
-					password,
 					date: toYyyyMMdd(date)
 				})
 			});
@@ -662,7 +660,6 @@ export default function Home() {
 				},
 				body: JSON.stringify({
 					username: username.trim(),
-					password,
 					date: toYyyyMMdd(date)
 				})
 			});
@@ -702,8 +699,8 @@ export default function Home() {
 		}
 
 		const safeUsername = username.trim();
-		if (!safeUsername || !password) {
-			updateActionStatus("error", "请先输入学号和密码");
+		if (!safeUsername) {
+			updateActionStatus("error", "请先选择账号");
 			return;
 		}
 
@@ -731,7 +728,6 @@ export default function Home() {
 				},
 				body: JSON.stringify({
 					username: safeUsername,
-					password,
 					courseSchedId,
 					timestamp: signTimestamp
 				})
@@ -874,7 +870,7 @@ export default function Home() {
 								onClick={() => {
 									resetGeneratedSignState();
 									setFeatureMode("query");
-									updateStatus("idle", "输入学号、密码和日期，开始查询课程");
+									updateStatus("idle", "选择账号和日期，开始查询课程");
 								}}
 								className={`action-btn min-h-11 rounded-lg px-3.5 py-2 text-xs font-semibold sm:text-sm ${
 									featureMode === "query" ? "action-btn--primary" : "action-btn--secondary"
@@ -907,35 +903,23 @@ export default function Home() {
 								<div className="space-y-1">
 									<h2 className="font-[var(--font-serif)] text-2xl font-semibold">查询课程</h2>
 									<p className="text-xs tracking-[0.08em] uppercase text-[color:var(--green)]">
-										学号和密码仅用于本次查询，不会存储
+										账号凭据由服务端安全托管
 									</p>
 								</div>
 
 								<div className="mt-6 space-y-4">
 									<label className="block text-sm font-semibold">
-										学号
-										<input
+										账号
+										<select
 											className="focus-ring input-surface mt-2 w-full rounded-xl border border-[color:var(--line)] px-4 py-2.5"
 											name="studentId"
 											value={username}
 											onChange={(e) => setUsername(e.target.value)}
-											autoComplete="username"
-											spellCheck={false}
 											required
-										/>
-									</label>
-
-									<label className="block text-sm font-semibold">
-										密码
-										<input
-											type="password"
-											className="focus-ring input-surface mt-2 w-full rounded-xl border border-[color:var(--line)] px-4 py-2.5"
-											name="password"
-											value={password}
-											onChange={(e) => setPassword(e.target.value)}
-											autoComplete="current-password"
-											required
-										/>
+										>
+											<option value="202618015059012">202618015059012</option>
+											<option value="202628013229057">202628013229057</option>
+										</select>
 									</label>
 
 									<label className="block text-sm font-semibold">

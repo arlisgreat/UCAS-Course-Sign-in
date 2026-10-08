@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { resolveUcasCredentials } from "@/lib/ucas-accounts";
 
 const LOGIN_URL = "https://iclass.ucas.edu.cn:8181/app/user/login.action";
 const SIGN_URL = "https://iclass.ucas.edu.cn:8181/app/course/stu_scan_sign.action";
@@ -19,8 +20,6 @@ const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 const RATE_LIMIT_WINDOW_MAX = toPositiveInt(process.env.RATE_LIMIT_5M_MAX, 100);
 const RATE_LIMIT_DAILY_MAX = toPositiveInt(process.env.RATE_LIMIT_DAILY_MAX, 20);
 const RATE_LIMIT_SWEEP_INTERVAL_MS = 10 * 60 * 1000;
-const MAX_USERNAME_LENGTH = 40;
-const MAX_PASSWORD_LENGTH = 80;
 
 type RateLimitState = {
 	windowHits: number[];
@@ -172,19 +171,6 @@ function consumeRateLimit(ip: string, now: number): { ok: true } | { ok: false; 
 	return { ok: true };
 }
 
-function isCredentialInputInvalid(username: string, password: string): boolean {
-	if (!username || !password) {
-		return true;
-	}
-	if (username.length > MAX_USERNAME_LENGTH || password.length > MAX_PASSWORD_LENGTH) {
-		return true;
-	}
-	if (/\s/.test(username)) {
-		return true;
-	}
-	return false;
-}
-
 function normalizeCourseSchedId(raw: string): string | null {
 	const compact = raw.trim();
 	if (!/^\d{7}$/.test(compact)) {
@@ -245,8 +231,7 @@ export async function POST(req: NextRequest) {
 		}
 
 		const bodyObject = typeof body === "object" && body !== null ? (body as Record<string, unknown>) : {};
-		const username = String(bodyObject.username ?? "").trim();
-		const password = String(bodyObject.password ?? "");
+		const credentials = resolveUcasCredentials(bodyObject.username);
 		const courseSchedIdRaw = String(bodyObject.courseSchedId ?? bodyObject.timeTableId ?? "");
 		const courseSchedId = normalizeCourseSchedId(courseSchedIdRaw);
 		const clientTimestamp =
@@ -254,9 +239,13 @@ export async function POST(req: NextRequest) {
 				? bodyObject.timestamp
 				: Date.now();
 
-		if (isCredentialInputInvalid(username, password)) {
-			return jsonWithHeaders({ message: "学号或密码格式错误" }, { status: 400 });
+		if (!credentials.ok) {
+			if (credentials.reason === "missing_secret") {
+				return jsonWithHeaders({ message: "服务端账号尚未配置" }, { status: 503 });
+			}
+			return jsonWithHeaders({ message: "请选择页面提供的账号" }, { status: 400 });
 		}
+		const { username, password } = credentials;
 
 		if (!courseSchedId) {
 			return jsonWithHeaders({ message: "课程 ID 格式错误" }, { status: 400 });
